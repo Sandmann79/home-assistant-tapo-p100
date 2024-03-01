@@ -73,6 +73,10 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
         )
 
     @property
+    def target_temperature_step(self) -> float:
+        return 1
+
+    @property
     def target_temperature(self) -> float | None:
         return (
             cast(TapoCoordinator, self.coordinator)
