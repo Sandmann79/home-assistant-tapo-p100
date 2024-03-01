@@ -46,7 +46,7 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
 
     @property
     def hvac_modes(self) -> HVACMode | None:
-        return [HVACMode.OFF, HVACMode.HEAT]
+        return [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT]
 
     @property
     def min_temp(self) -> float:
@@ -105,15 +105,22 @@ class TRVClimate(BaseTapoHubChildEntity, ClimateEntity):
             .get_state_of(HubChildCommonState)
             .trv_state
         )
+        frost_protection_on = (
+            cast(TapoCoordinator, self.coordinator)
+            .get_state_of(HubChildCommonState)
+            .frost_protection_on
+        )
 
         if trv_state == TRVState.HEATING:
             return HVACMode.HEAT
+        elif not frost_protection_on:
+            return HVACMode.AUTO
         else:
             return HVACMode.OFF
 
     # Kasa seems to use Frost Protection to turn the TRV On and Off
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode in [HVACMode.HEAT, HVACMode.AUTO]:
             (
                 await cast(
                     TapoCoordinator, self.coordinator
